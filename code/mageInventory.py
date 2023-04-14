@@ -127,7 +127,9 @@ class Praxes(QWidget):
             self.edit_buttons.addButton(button, self.row)
 
             # arcanum
-            arcanum_label = QLabel(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
+            arcanum_label = QLabel(
+                f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
+            )
             arcanum_label.setStyleSheet("QLabel {font: 10pt}")
             self.praxes[self.row]['arcanum'] = arcanum_label
 
@@ -170,7 +172,7 @@ class Praxes(QWidget):
             details = self.character.stats['praxes'][name]
             arcanum = details['arcanum']
             arcanum_label = self.praxes[index]['arcanum']
-            new_arcanum = arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")"
+            new_arcanum = f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
             arcanum_label.setText(new_arcanum)
 
             pool_label = self.praxes[index]['pool']
@@ -231,7 +233,9 @@ class Praxes(QWidget):
             self.edit_buttons.addButton(button, self.row)
 
             # arcanum
-            arcanum_label = QLabel(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
+            arcanum_label = QLabel(
+                f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
+            )
             arcanum_label.setStyleSheet("QLabel {font: 10pt}")
             self.praxes[self.row]['arcanum'] = arcanum_label
 
@@ -280,7 +284,9 @@ class Praxes(QWidget):
             self.praxes[index]['button'].setToolTip(tooltip)
 
             # Update arcanum
-            self.praxes[index]['arcanum'].setText(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
+            self.praxes[index]['arcanum'].setText(
+                f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
+            )
 
             # Update pool
             pool = self.calculate_pool(arcanum)
@@ -357,11 +363,11 @@ class Praxis_Dialog(QDialog):
         self.name_entry.insert("####delete####")
         self.accept()
 
-    def get_praxis(wintitle, name='', tooltip='', arcanum='', edit=False):
+    def get_praxis(self, name='', tooltip='', arcanum='', edit=False):
         '''
         Used to open a dialog window to enter details of label.
         '''
-        dialog = Praxis_Dialog(wintitle, name, tooltip, arcanum, edit)
+        dialog = Praxis_Dialog(self, name, tooltip, arcanum, edit)
         result = dialog.exec_()
         out_name = dialog.name_entry.text().lower()
         out_tooltip = dialog.tooltip_entry.toPlainText()
@@ -469,13 +475,19 @@ class Ench_Items(QWidget):
 
         if item_type == "imbued":
             # imbued pool = rating + player Gnosis
-            return (str(rating + self.character.stats['gnosis']),
-                    "Item Rating(" + str(rating) + ") + Character Gnosis(" + str(self.character.stats['gnosis']) + ")")
+            return (
+                str(rating + self.character.stats['gnosis']),
+                f"Item Rating({rating}) + Character Gnosis("
+                + str(self.character.stats['gnosis'])
+                + ")",
+            )
         else:
             # artifact pool = rating + 0.5*rating (rounded up)
             # players can optionally use their own stats, but will only show the item's stats
-            return (str(math.ceil(rating * 1.5)),
-                    "Item Rating(" + str(rating) + ") + Item Gnosis(" + str(math.ceil(rating / 2)) + ")")
+            return (
+                str(math.ceil(rating * 1.5)),
+                f"Item Rating({rating}) + Item Gnosis({str(math.ceil(rating / 2))})",
+            )
 
     def update_items(self):
         for index in self.items:
@@ -624,10 +636,7 @@ class EnchItem_Dialog(QDialog):
         self.name = name
         self.tooltip = tooltip
         self.rating = rating
-        if item_type == 'imbued':
-            self.mana_mod_amt = mana - 1
-        else:
-            self.mana_mod_amt = 0
+        self.mana_mod_amt = mana - 1 if item_type == 'imbued' else 0
         self.edit = edit
 
         self.initUI()
@@ -734,11 +743,11 @@ class EnchItem_Dialog(QDialog):
         self.name_entry.insert("a####delete####")
         self.accept()
 
-    def get_input(wintitle, item_type='artifact', name='', tooltip='', rating=0, mana=0, edit=False):
+    def get_input(self, item_type='artifact', name='', tooltip='', rating=0, mana=0, edit=False):
         '''
         Used to open a dialog window to enter details of label.
         '''
-        dialog = EnchItem_Dialog(wintitle, item_type, name, tooltip, rating, mana, edit)
+        dialog = EnchItem_Dialog(self, item_type, name, tooltip, rating, mana, edit)
         result = dialog.exec_()
         out_type = dialog.type_entry.currentText().lower()
         out_name = dialog.name_entry.text().lower()
@@ -805,12 +814,14 @@ class Rotes(QWidget):
             self.edit_buttons.addButton(button, self.row)
 
             # primary arcanum
-            arcanum_label = QLabel(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
+            arcanum_label = QLabel(
+                f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
+            )
             arcanum_label.setStyleSheet("QLabel {font: 10pt}")
             self.rotes[self.row].append(arcanum_label)
 
             # rote skill
-            skill_label = QLabel(skill.title() + " (" + str(self.character.stats[skill]) + ")")
+            skill_label = QLabel(f"{skill.title()} ({str(self.character.stats[skill])})")
             # check for rote skill
             if skill in self.character.stats['rote skills']:
                 skill_label.setStyleSheet("QLabel {font: bold; font-size: 10pt}")
@@ -869,8 +880,8 @@ class Rotes(QWidget):
             arcanum = self.character.stats['rotes'][rote]['arcanum']
             skill = self.character.stats['rotes'][rote]['skill']
 
-            current[1].setText(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
-            current[2].setText(skill.title() + " (" + str(self.character.stats[skill]) + ")")
+            current[1].setText(f"{arcanum.title()} ({str(self.character.stats[arcanum])})")
+            current[2].setText(f"{skill.title()} ({str(self.character.stats[skill])})")
 
             # change skill formatting
             if skill in self.character.stats['rote skills']:
@@ -939,12 +950,14 @@ class Rotes(QWidget):
             self.edit_buttons.addButton(button, self.row)
 
             # primary arcanum
-            arcanum_label = QLabel(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
+            arcanum_label = QLabel(
+                f"{arcanum.title()} ({str(self.character.stats[arcanum])})"
+            )
             arcanum_label.setStyleSheet("QLabel {font: 10pt}")
             self.rotes[self.row].append(arcanum_label)
 
             # rote skill
-            skill_label = QLabel(skill.title() + " (" + str(self.character.stats[skill]) + ")")
+            skill_label = QLabel(f"{skill.title()} ({str(self.character.stats[skill])})")
             # check for rote skill
             if skill in self.character.stats['rote skills']:
                 skill_label.setStyleSheet("QLabel {font: bold; font-size: 10pt}")
@@ -1007,8 +1020,8 @@ class Rotes(QWidget):
 
             # Update existing entry
             current[0].setToolTip(tooltip)
-            current[1].setText(arcanum.title() + " (" + str(self.character.stats[arcanum]) + ")")
-            current[2].setText(skill.title() + " (" + str(self.character.stats[skill]) + ")")
+            current[1].setText(f"{arcanum.title()} ({str(self.character.stats[arcanum])})")
+            current[2].setText(f"{skill.title()} ({str(self.character.stats[skill])})")
 
             # change skill formatting
             if skill in self.character.stats['rote skills']:
@@ -1103,11 +1116,11 @@ class Rote_Dialog(QDialog):
         self.title_entry.insert("####delete####")
         self.accept()
 
-    def get_input(wintitle, title='', tooltip='', skill='', arcanum='', edit=False):
+    def get_input(self, title='', tooltip='', skill='', arcanum='', edit=False):
         '''
         Used to open a dialog window to enter details of label.
         '''
-        dialog = Rote_Dialog(wintitle, title, tooltip, skill, arcanum, edit)
+        dialog = Rote_Dialog(self, title, tooltip, skill, arcanum, edit)
         result = dialog.exec_()
         return (
         dialog.title_entry.text().lower(), dialog.tooltip_entry.toPlainText(), dialog.skill_entry.currentText().lower(),

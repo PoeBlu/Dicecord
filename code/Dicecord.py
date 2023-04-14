@@ -192,11 +192,7 @@ class New_Character_Dialog(QDialog):
         else:
             out_computer = 'enigmas'
 
-        if dialog.ride_slider.sliderPosition() == 0:
-            out_drive = "drive"
-        else:
-            out_drive = 'ride'
-
+        out_drive = "drive" if dialog.ride_slider.sliderPosition() == 0 else 'ride'
         if dialog.fire_slider.sliderPosition() == 0:
             out_firearms = "firearms"
         else:
@@ -346,7 +342,7 @@ class Main(QMainWindow):
             message.setIcon(QMessageBox.Critical)
             message.setWindowIcon(QIcon(r'images\D10.ico'))
             message.setText("Unable to connect to server.")
-            message.setInformativeText("Error Code: " + e.code)
+            message.setInformativeText(f"Error Code: {e.code}")
             message.addButton("Okay", QMessageBox.AcceptRole)
             message.exec_()
             return
@@ -377,7 +373,7 @@ class Main(QMainWindow):
             message.setWindowTitle("Update available")
             message.setWindowIcon(QIcon(r'images\D10.ico'))
             message.setIcon(QMessageBox.Warning)
-            message.setText("Do you want to update to version " + version + "?")
+            message.setText(f"Do you want to update to version {version}?")
             message.addButton("Yes", QMessageBox.AcceptRole)
             message.addButton("No", QMessageBox.AcceptRole)
             message.exec_()
@@ -410,21 +406,21 @@ class Main(QMainWindow):
         if self.edit_Action.isChecked():
             # edit mode turned on, save current copy of character
             self.old_character = copy.deepcopy(self.character)
-            
+
         # toggle edit mode on sheet
         self.sheet.edit_toggle(self.edit_Action.isChecked())
 
-        
-        if not self.edit_Action.isChecked():
-            # edit mode turned off
-            # check for changes
-            if self.character.stats != self.old_character.stats:
-                if self.path:
-                    # bring up save/discard choice dialog
-                    self.ask_save()
-                else:
-                    # no path yet
-                    self.ask_save(new = True)
+
+        if (
+            not self.edit_Action.isChecked()
+            and self.character.stats != self.old_character.stats
+        ):
+            if self.path:
+                # bring up save/discard choice dialog
+                self.ask_save()
+            else:
+                # no path yet
+                self.ask_save(new = True)
                 
             
     def ask_save(self, new = False):
@@ -441,14 +437,14 @@ class Main(QMainWindow):
         else:
             message.addButton("Yes", QMessageBox.AcceptRole)
         message.addButton("No", QMessageBox.RejectRole)
-            
+
         message.exec_()
         clicked = message.clickedButton().text()
-        
+
         if clicked == 'Save':
             self.save()
-            
-        elif clicked == 'Save As' or clicked == "Yes":
+
+        elif clicked in ['Save As', "Yes"]:
             self.save(save_as = True)
 
         elif clicked == 'Reset':
@@ -462,23 +458,23 @@ class Main(QMainWindow):
             name = self.character.stats['shadow name']
         else:
             name = self.character.stats['name']
-            
+
         if name == '':
             name = 'character'
 
-        path = "characters/" + name
+        path = f"characters/{name}"
 
-        if self.path == None or save_as:
+        if self.path is None or save_as:
             # open filedialog to get path
             fname = QFileDialog.getSaveFileName(self, 'Save file', path, "XML Files (*.xml)")
             if fname[0] == '':
                 # nothing chosen, end function
                 return
-            
+
             self.path = fname[0]
 
         self.character.save_xml(self.path)
-        
+
         # set as old_character copy for detecting further changes on quit
         self.old_character = copy.deepcopy(self.character)
 
@@ -503,16 +499,15 @@ class Main(QMainWindow):
         self.dialog.show()
 
     def about_display(self):
-        file = open(r'LICENSE\ABOUT.txt', 'r')
-        content = file.read()
-        file.close()
+        with open(r'LICENSE\ABOUT.txt', 'r') as file:
+            content = file.read()
         box = QLabel(content)
-        self.dialog = New_Window(box, "Dicecord v" + VERSION)
+        self.dialog = New_Window(box, f"Dicecord v{VERSION}")
         self.dialog.show()
 
     def closeEvent(self, event):
 
-        if self.character == None:
+        if self.character is None:
             # if no character close
             event.accept()
             return
@@ -524,7 +519,7 @@ class Main(QMainWindow):
         badMessages_changed = self.character.badMessages != self.old_character.badMessages
         goodRates_changed = self.character.goodRate != self.old_character.goodRate
         badRates_changed = self.character.badRate != self.old_character.badRate
-            
+
         if stat_changed or note_changed or goodMessages_changed or badMessages_changed or goodRates_changed or badRates_changed:
             # unsaved changes
             message = QMessageBox()
@@ -535,8 +530,8 @@ class Main(QMainWindow):
             message.addButton("Yes", QMessageBox.AcceptRole)
             message.addButton("No", QMessageBox.ApplyRole)
             message.addButton("Cancel", QMessageBox.HelpRole)
-        
-            
+
+
             message.exec_()
             clicked = message.clickedButton().text()
 
@@ -651,9 +646,7 @@ class Personality(QWidget):
         bad_label = QLabel("Negative Messages")
         self.bad_text = QTextEdit()
         self.bad_text.setStatusTip("One line per message.")
-        bad_content = ''
-        for message in self.character.badMessages:
-            bad_content += message + '\n'
+        bad_content = ''.join(message + '\n' for message in self.character.badMessages)
         self.bad_text.setText(bad_content)
 
         save_button = QPushButton("Save And Close")
@@ -739,11 +732,10 @@ class Roller(QMainWindow):
         app.processEvents()
 
     def about_display(self):
-        file = open(r'LICENSE\ABOUT.txt', 'r')
-        content = file.read()
-        file.close()
+        with open(r'LICENSE\ABOUT.txt', 'r') as file:
+            content = file.read()
         box = QLabel(content)
-        self.dialog = New_Window(box, "Dicecord v" + VERSION)
+        self.dialog = New_Window(box, f"Dicecord v{VERSION}")
         self.dialog.show()
 
 class New_Window(QMainWindow):
@@ -954,13 +946,9 @@ class Dice_Roller(QWidget):
         value = ''
 
         # Use loop to get the digits from message
-        while True:
-            if message[index].isdigit():
-                value = message[index] + value
-                index -= 1
-            else:
-                break
-
+        while message[index].isdigit():
+            value = message[index] + value
+            index -= 1
         value = int(value)
 
         if value == 0 and random.randrange(1,100) <= self.character.badRate:
@@ -1012,18 +1000,13 @@ class Dice_Roller(QWidget):
         method to display last roll in a pop up window
         '''
 
-        # get last roll
-        last_roll = self.character.get_last_roll()
-
-        # check if empty
-        if not last_roll:
-            ## only status bar updated if empty
-            self.parent.status_update("No previous rolls")
-
-        else:
+        if last_roll := self.character.get_last_roll():
             # open Last_Roll_Display widget in its own window
             self.dialog = New_Window(Last_Roll_Display(self.character), "Last Roll")
             self.dialog.show()
+        else:
+            ## only status bar updated if empty
+            self.parent.status_update("No previous rolls")
 
 def send(message, webhook, parent):
     '''
@@ -1045,9 +1028,9 @@ def send(message, webhook, parent):
     # headers for the connection
     # If expanding to other services further changes may be required here
     headers = {
-                'content-type': "multipart/form-data; boundary=" + sep[2:],
-                'cache-control': "no-cache",
-                }
+        'content-type': f"multipart/form-data; boundary={sep[2:]}",
+        'cache-control': "no-cache",
+    }
 
     # sends a POST command to the webhook with the payload and headers defined above
     conn.request("POST", webhook, payload, headers)
@@ -1083,7 +1066,9 @@ def send(message, webhook, parent):
             wait = int(wait)/1000 + 0.5
 
             # update status, should always have at least 3 significant digits
-            parent.status_update("Rate limit hit. Will try again in " + str(wait)[:4] + " seconds.")
+            parent.status_update(
+                f"Rate limit hit. Will try again in {str(wait)[:4]} seconds."
+            )
 
             # try again after wait
             time.sleep(wait)

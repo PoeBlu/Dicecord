@@ -152,7 +152,7 @@ class Character:
                 root.append(item)
                 item.text = skill
 
-            
+
         for stat in self.stats:
             # skills
             if stat in stats.SKILLS:
@@ -177,7 +177,6 @@ class Character:
                 # skip these - added when associated skill added
                 pass
 
-            # stat contains a dict
             elif type(self.stats[stat]) is dict:
                 if self.stats[stat] != {}:
                     item = Element('dict')
@@ -189,12 +188,10 @@ class Character:
 
                     for entry in self.stats[stat]:
                         details = self.stats[stat][entry]
+                        name = Element('name')
+                        item.append(name)
                         # can be a dict itself, or a value
                         if type(details) is dict:
-                            name = Element('name')
-                            item.append(name)
-                            name.text = str(entry)
-
                             for detail in details:
                                 # loop over dict, skip blank entries
                                 if details[detail] != '':
@@ -203,15 +200,12 @@ class Character:
                                     item.append(content)
                                     content.text = str(details[detail])
                         else:
-                            name = Element('name')
-                            item.append(name)
-                            name.text = str(entry)
-
                             tooltip = Element('tooltip')
                             item.append(tooltip)
                             tooltip.text = str(details)
 
-            # health
+                        name.text = str(entry)
+
             elif stat == 'health':
                 health = self.stats['health']
                 item = Element('health')
@@ -230,7 +224,6 @@ class Character:
                 item.append(lethal)
                 item.append(agg)
 
-            # stat is a string or a number
             elif type(stat) is int or type(stat) is str:
                 if self.stats[stat] != '':
                     item = Element('other')
@@ -277,9 +270,8 @@ class Character:
         # used to remove ’ style apostrophes that cause crashes when reading the file
         text = text.replace('’', "'")
 
-        f = open(path, 'w')
-        f.write(text)
-        f.close()
+        with open(path, 'w') as f:
+            f.write(text)
 
     @classmethod
     def from_xml(cls, path):
@@ -308,7 +300,7 @@ class Character:
 
         input_splat = splat.text
         char = cls(splat = input_splat)
-            
+
         for element in dicts:
             stat = element.find('statname').text
             char.stats[stat] = {}
@@ -332,16 +324,13 @@ class Character:
                 tooltip = skill.find('tooltip').text
                 char.stats['skill specialties'][name] = tooltip
 
-        dam_type = 1
-        for damage in ['bashing', 'lethal', 'agg']:
+        for dam_type, damage in enumerate(['bashing', 'lethal', 'agg'], start=1):
             amount = int(health.find(damage).text)
             char.stats['health'][dam_type] = amount
-            dam_type += 1
-
         for other in others:
             name = other.find('name').text
             rating = other.find('rating').text
-            if rating == None:
+            if rating is None:
                 # happens only for blank string inputs
                 char.stats[name] = ''
             elif rating.isdigit() and name != 'user id':
@@ -357,7 +346,7 @@ class Character:
             roteskills = dom.findall('rote_skill')
             for skill in roteskills:
                 char.stats['rote skills'].add(skill.text)
-            
+
         char.goodMessages = []
         char.badMessages = []
 
@@ -397,15 +386,15 @@ class Character:
         # self.last_roll field collects the value of each rolled die
         # initialised to blank here, will be set in each self.roll_die call
         self.last_roll = []
-        
+
         # successes collector variable 
         successes = 0
-        
+
         # fail collector in case it is a rote
         fails = []
 
-        
-        for die in range(0,dice):
+
+        for _ in range(dice):
             # roll each die
             result = self.roll_die(again)
             if result == 0:
@@ -417,12 +406,12 @@ class Character:
 
         if rote:
             # if a rote all failed dice are rerolled once
-            for die in fails:
+            for _ in fails:
                 successes += self.roll_die(again, rote_reroll = True)
 
         # send message
         messages = []
-        
+
         if not quiet:
             # add all messages if quiet mode
             messages.extend(self.last_roll)
@@ -434,18 +423,18 @@ class Character:
                 # find dice value
                 value = ''.join(x for x in message[len(self.stats['user id']) + 1:] if x.isdigit())
                 if "exploded" in message:
-                    out += "(" + value + ")"
+                    out += f"({value})"
                 elif "rote" in message:
-                    out += " Rote:" + value
+                    out += f" Rote:{value}"
                 else:
-                    out += " " + value
+                    out += f" {value}"
 
             messages.append(out)
-                
+
 
         # add total results message
         messages.append("Total Successes for " + self.stats['user id'] + " : " + str(successes))
-        
+
         return messages
             
     def roll_die(self, again = 10, explode_reroll = False, rote_reroll = False):
@@ -494,17 +483,17 @@ class Character:
         value = random.randrange(1, 11)
 
         # clear last roll and append chance die result
-        self.last_roll = []
-        self.last_roll.append(self.stats['user id'] + " rolled a chance die: " + str(value))
-
+        self.last_roll = [
+            self.stats['user id'] + " rolled a chance die: " + str(value)
+        ]
         # Give value
         messages = [self.stats['user id'] + " chance rolled " + str(value)]
 
         # # check if failure, botch or success
-        if value == 10:
-            messages.append(self.stats['user id'] + " got a success!")
-        elif value == 1:
+        if value == 1:
             messages.append(self.stats['user id'] + " botched!")
+        elif value == 10:
+            messages.append(self.stats['user id'] + " got a success!")
         else:
             messages.append(self.stats['user id'] + " failed!")
 

@@ -69,11 +69,10 @@ class Main(QMainWindow):
         self.show()
 
     def about_display(self):
-        file = open(r'LICENSE\ABOUT.txt', 'r')
-        content = file.read()
-        file.close()
+        with open(r'LICENSE\ABOUT.txt', 'r') as file:
+            content = file.read()
         box = QLabel(content)
-        self.dialog = New_Window(box, "Dicecord " + VERSION)
+        self.dialog = New_Window(box, f"Dicecord {VERSION}")
         self.dialog.show()
 
     def last_roll_display(self):
@@ -179,13 +178,13 @@ class Import_Widget(QWidget):
         '''     
         global char
         #will update a global character variable
-        
+
         webhook = self.webhook_field.text()
 
         #adds to userID to allow for @mentions in discord channels
         userID = self.userID_field.text()
         if userID.isdigit():
-            userID = "<@" + userID + ">"
+            userID = f"<@{userID}>"
 
         #change character object
         char.stats['webhook'] = webhook
@@ -399,7 +398,7 @@ class Dice_Roller(QWidget):
         #create connection
         #If expanding to other services further changes will be required here
         conn = http.client.HTTPSConnection("discordapp.com")
-        
+
         #input sanitation: the seperator for each element is replaced by a space if found in message
         sep = "--11BOUND11"
         message = message.replace(sep, " ")
@@ -411,25 +410,25 @@ class Dice_Roller(QWidget):
         #headers for the connection
         #If expanding to other services further changes may be required here
         headers = {
-        'content-type': "multipart/form-data; boundary=" + sep[2:],
-        'cache-control': "no-cache",
+            'content-type': f"multipart/form-data; boundary={sep[2:]}",
+            'cache-control': "no-cache",
         }
-        
+
         #sends a POST command to the webhook with the payload and headers defined above
         conn.request("POST", webhook, payload, headers)
-        
+
         #get response
         res = conn.getresponse()
-        
+
         #warning messages
         text = res.read()
         text = text.decode("utf-8")
-        
+
         #first check if there was a warning message
         #For discord, the data will be blank unless error occures sending webhook
         #Usually a rate limit hit
         #For expansion to other services this may need to be updated
-        
+
         if text != "":
             if "rate limited" in text:
                 #confirms that is is a rate limit on Discord
@@ -444,23 +443,23 @@ class Dice_Roller(QWidget):
                         wait += character
                     if character == '\n':
                         break
-                
+
                 #wait will given in miliseconds, convert to seconds and add 0.5 just in case
                 wait = int(wait)/1000 + 0.5
-                
+
                 #update status, should always have at least 3 significant digits
-                self.parent.status_update("Rate limit hit. Will try again in " + str(wait)[:4] + " seconds.")
+                self.parent.status_update(
+                    f"Rate limit hit. Will try again in {str(wait)[:4]} seconds."
+                )
 
                 #try again after wait
                 time.sleep(wait)
                 send(message, webhook)
-                
+
             if "400 Bad Request" in text:
                 #Likely bad bad URL
                 #look into making a pop up dialogue instead
                 self.parent.status_update("400 Bad Request - Double check URL.")
-                return
-
             else:
                 #Unexpected problem - Result printed to client console
                 #goes as a temp message so it won't be overwritten by success message
@@ -470,21 +469,7 @@ class Dice_Roller(QWidget):
                 index2 = text.find('\n', index1)
                 chop = text[index1:index2]
                 self.parent.statusBar.showMessage(chop)
-                return
-            #end of if statement for warning message
-
-            #now include some rate limit protection
-            remaining = int(res.getheader('X-RateLimit-Remaining'))
-            reset = int(res.getheader('X-RateLimit-Reset')) - int(time.time())
-
-            #reset should be the number of seconds until rate limit refreshed
-            #In my experience it will reset faster than this
-            #For now, it will add delays to messages if remaining message count is less than or equal to 2
-
-            if remaining <= 2:
-                self.parent.status_update("Rate Limit approaching. Next message delay is 2 seconds.")
-                #already a 1 second delay between messages, so extra secound added here
-                time.sleep(1)
+            return
                 
 
 

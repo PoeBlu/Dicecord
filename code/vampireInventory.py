@@ -201,10 +201,8 @@ class RitesMiracles(QWidget):
             self.character.stats['rites or miracles'][name] = {'tooltip': tooltip, 'level': level}
 
             # create entry
-            self.items[self.row] = {'name': name}
+            self.items[self.row] = {'name': name, 'button': QPushButton(name.title())}
 
-            # entry name
-            self.items[self.row]['button'] = QPushButton(name.title())
             self.items[self.row]['button'].setStyleSheet("QPushButton {font: 10pt; border: none}")
             self.items[self.row]['button'].setCursor(QCursor(Qt.PointingHandCursor))
             self.items[self.row]['button'].setToolTip(tooltip)
@@ -317,11 +315,11 @@ class RitesMiracles_Dialog(QDialog):
         self.name_entry.insert("a####delete####")
         self.accept()
 
-    def get_input(wintitle, name = '', tooltip = '', level = 0, edit=False):
+    def get_input(self, name = '', tooltip = '', level = 0, edit=False):
         '''
         Used to open a dialog window to enter details of label.
         '''
-        dialog = RitesMiracles_Dialog(wintitle, name, tooltip, level, edit)
+        dialog = RitesMiracles_Dialog(self, name, tooltip, level, edit)
         result = dialog.exec_()
         out_name = dialog.name_entry.text().lower()
         out_tooltip = dialog.tooltip_entry.toPlainText()

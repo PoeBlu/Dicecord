@@ -19,15 +19,11 @@ class Character_Info(QWidget):
         grid = QGridLayout()
         self.setLayout(grid)
 
-        col = 0
         self.headers = {}
-        for section in self.labels:
-            row = 0
-            for name in section:
+        for col, section in enumerate(self.labels):
+            for row, name in enumerate(section):
                 self.headers[name] = Label_Entry_Combo(self.character, name)
                 grid.addWidget(self.headers[name], row, col)
-                row += 1
-            col += 1
 
     def edit_toggle(self):
         for name in self.headers:
@@ -42,7 +38,7 @@ class Label_Entry_Combo(QWidget):
         self.initUI()
 
     def initUI(self):
-        label = QLabel(self.name.title() + ":")
+        label = QLabel(f"{self.name.title()}:")
         label.setMinimumWidth(50)
         self.content = QLineEdit()
         self.content.setMaximumWidth(100)
@@ -51,7 +47,7 @@ class Label_Entry_Combo(QWidget):
         except KeyError:
             # happens when no content when read
             self.character.stats[self.name] = ''
-        
+
         box = QHBoxLayout()
         self.setLayout(box)
         box.setSpacing(5)
@@ -66,7 +62,7 @@ class Label_Entry_Combo(QWidget):
         new = self.content.text()
         # if numeric userID, add <@ and > around it so discord will parse properly
         if self.name == 'user id' and new.isdigit():
-            new = '<@' + new + '>'
+            new = f'<@{new}>'
 
         self.character.stats[self.name] = new
         self.content.setReadOnly(True)
@@ -184,17 +180,15 @@ class Stat_Col(QWidget):
 
         for stat in self.stats:
             if self.type == "skill":
-                # check if stat is on character - distinguishes dark era and modern era
-                if stat in self.character.stats:
-                    if self.character.splat == 'mage':
-                        # if mage, draw rote skill box
-                        rotes = self.character.stats['rote skills']
-                        rote_button = (Square(stat, self.character, filled= stat in rotes))
-                        rote_button.clicked.connect(rote_button.change_Image)
-                        grid.addWidget(rote_button,row,0)
-                else:
+                if stat not in self.character.stats:
                     continue
-                
+
+                if self.character.splat == 'mage':
+                    # if mage, draw rote skill box
+                    rotes = self.character.stats['rote skills']
+                    rote_button = (Square(stat, self.character, filled= stat in rotes))
+                    rote_button.clicked.connect(rote_button.change_Image)
+                    grid.addWidget(rote_button,row,0)
             grid.addWidget(Stat(self.character, stat, type = self.type),row,1)
             row += 1
         
@@ -222,7 +216,7 @@ class StatWithTooltip(QWidget):
         content = self.character.stats[self.name]
         self.stats = {}
 
-        self.label = QLabel('===' + self.name.upper() + '===')
+        self.label = QLabel(f'==={self.name.upper()}===')
         self.box.addWidget(self.label)
         self.box.setAlignment(Qt.AlignTop)
         self.box.setAlignment(self.label, Qt.AlignHCenter)
@@ -273,15 +267,21 @@ class StatWithTooltip(QWidget):
         if not index:
             current_title = None
             # add new item if no index given
-            new, tooltip, ok = Label_Tooltip_Dialog.get_input(wintitle="Add " + self.name.title())
+            new, tooltip, ok = Label_Tooltip_Dialog.get_input(
+                wintitle=f"Add {self.name.title()}"
+            )
 
         else:
             # edit current item
             current = self.stats[index]
             current_title = current.label.text().lower()
             current_tooltip = current.label.toolTip()
-            label, tooltip, ok = Label_Tooltip_Dialog.get_input(title=current_title.title(), tooltip=current_tooltip,
-                                                                        edit=True, wintitle="Change " + self.name.title())
+            label, tooltip, ok = Label_Tooltip_Dialog.get_input(
+                title=current_title.title(),
+                tooltip=current_tooltip,
+                edit=True,
+                wintitle=f"Change {self.name.title()}",
+            )
 
         if not ok:
             # cancel pressed
@@ -487,11 +487,9 @@ class Derivitives(QWidget):
         for i in range(1, 6):
             if i <= self.character.stats["beats"]:
                 beats[i] = Square("beats", self.character, filled=True)
-                beatbox.addWidget(beats[i])
-
             else:
                 beats[i] = Square("beats", self.character, filled=False)
-                beatbox.addWidget(beats[i])
+            beatbox.addWidget(beats[i])
 
         self.grid.addWidget(beat_label, 7, 0)
         self.grid.addLayout(beatbox, 7, 1)
@@ -524,11 +522,9 @@ class Derivitives(QWidget):
             for i in range(1, 6):
                 if i <= self.character.stats["arcane beats"]:
                     arcbeats[i] = Square("arcane beats", self.character, filled=True)
-                    arcbeatbox.addWidget(arcbeats[i])
-
                 else:
                     arcbeats[i] = Square("arcane beats", self.character, filled=False)
-                    arcbeatbox.addWidget(arcbeats[i])
+                arcbeatbox.addWidget(arcbeats[i])
 
             self.grid.addWidget(arcbeat_label, 9, 0)
             self.grid.addLayout(arcbeatbox, 9, 1)
@@ -557,8 +553,8 @@ class Derivitives(QWidget):
         mod = stats[1]
         total = stats[2]
         rating.change_text(str(self.character.stats[stat]))
-        self.character.stats[stat + ' mod'] = mod.value()
-        total_num = self.character.stats[stat] + self.character.stats[stat + ' mod']
+        self.character.stats[f'{stat} mod'] = mod.value()
+        total_num = self.character.stats[stat] + self.character.stats[f'{stat} mod']
         total.change_text(str(total_num))
 
     def update_others(self, stat, value):
@@ -605,10 +601,7 @@ class Willpower(QWidget):
         col = 0
 
         for x in range(1, 11):
-            if x <= self.current:
-                self.dots[x] = Dot(filled=True)
-            else:
-                self.dots[x] = Dot(filled=False)
+            self.dots[x] = Dot(filled=True) if x <= self.current else Dot(filled=False)
             if x <= self.filled:
                 squares[x] = Square("willpower", self.character, filled=True)
             else:
@@ -630,12 +623,8 @@ class Willpower(QWidget):
         print(self.current)
 
         for x in range(1, 11):
-            if x <= self.current:
-                self.dots[x].filled = True
-                self.dots[x].select_Image()
-            else:
-                self.dots[x].filled = False
-                self.dots[x].select_Image()
+            self.dots[x].filled = x <= self.current
+            self.dots[x].select_Image()
 
 
 class Health(QWidget):
@@ -673,11 +662,7 @@ class Health(QWidget):
         health = self.character.stats['health']
 
         for x in range(1, 13):
-            if x <= health[0]:
-                # health[0] is max jealth
-                self.dots[x] = Dot(filled=True)
-            else:
-                self.dots[x] = Dot(filled=False)
+            self.dots[x] = Dot(filled=True) if x <= health[0] else Dot(filled=False)
             squares[x] = Square("health", self.character, index=x)
             grid.addWidget(self.dots[x], 0, x)
             grid.addWidget(squares[x], 1, x)
@@ -694,12 +679,8 @@ class Health(QWidget):
         max_health = self.character.stats['health'][0]
 
         for x in range(1, 13):
-            if x <= max_health:
-                self.dots[x].filled = True
-                self.dots[x].select_Image()
-            else:
-                self.dots[x].filled = False
-                self.dots[x].select_Image()
+            self.dots[x].filled = x <= max_health
+            self.dots[x].select_Image()
 
 
 class Health_Group(QButtonGroup):
@@ -720,17 +701,17 @@ class Health_Group(QButtonGroup):
         # loop to initialise squares
         # counts from 0 to value starting with agg damage
         pos = 1
-        for point in range(0, health[3]):
+        for _ in range(health[3]):
             buttons[pos].filled = 3
             buttons[pos].select_Image()
             pos += 1
 
-        for point in range(0, health[2]):
+        for _ in range(health[2]):
             buttons[pos].filled = 2
             buttons[pos].select_Image()
             pos += 1
 
-        for point in range(0, health[1]):
+        for _ in range(health[1]):
             buttons[pos].filled = 1
             buttons[pos].select_Image()
             pos += 1
@@ -821,21 +802,18 @@ class Stat(QWidget):
                 # if tooltip isn't blank, cursor and tolltip change added
                 self.label.setCursor(QCursor(Qt.WhatsThisCursor))
                 self.label.setToolTip(self.tooltip)
-        
+
 
         else:
             self.label = QLabel(self.name.title())
 
-        
+
         box.addWidget(self.label)
 
         # it will initilaise with the dots filled accoridng to character.stats['name']
         # Each dot is an abstract button widget
         for x in range(1,self.maximum+1):
-            if x <= self.current:
-                dots[x] = Dot(filled=True)
-            else:
-                dots[x] = Dot(filled=False)
+            dots[x] = Dot(filled=True) if x <= self.current else Dot(filled=False)
             box.addWidget(dots[x])
 
         # a button group is created that will be used for changing dot rating
@@ -854,20 +832,17 @@ class Stat(QWidget):
         self.setLayout(box)
         box.setSpacing(5)
         box.setContentsMargins(0,0,0,0)
-        
+
         self.label = QLabel(self.name.title())
         self.label.setAlignment(Qt.AlignCenter)
         # will one day use a proper CSS to set this
-        
+
         box.addWidget(self.label)
 
         # it will initilaise with the dots filled accoridng to character.stats['name']
         # Each dot is an abstract button widget
         for x in range(1,self.maximum+1):
-            if x <= self.current:
-                dots[x] = Dot(filled=True)
-            else:
-                dots[x] = Dot(filled=False)
+            dots[x] = Dot(filled=True) if x <= self.current else Dot(filled=False)
             dotbox.addWidget(dots[x])
 
         box.addLayout(dotbox)
@@ -925,21 +900,16 @@ class Dots_Group(QButtonGroup):
         if not self.character.edit_mode:
             # nothing happens when not in edit mode
             return
-        
+
         if self.last_click == index:
             # if a dotis clicked a second time in a row it unfills it
             index -= 1
-        
+
         for x in range(1,self.maximum + 1):
             # currently has maximum hard coded
             # will need to replace with user entered maximum
-            if x <= index:
-                self.dots[x].filled = True
-                self.dots[x].select_Image()
-            elif x > index:
-                self.dots[x].filled = False
-                self.dots[x].select_Image()
-
+            self.dots[x].filled = x <= index
+            self.dots[x].select_Image()
         # associated stat is updated along with any derivitives
         if self.type == 'merit':
             self.character.stats['merits'][self.stat_name] = index
@@ -972,14 +942,8 @@ class Dot(QAbstractButton):
         filled = r"images\filled.png"
         unfilled = r"images\unfilled.png"
 
-        
-        if self.filled:
-            self.pixmap = QPixmap(filled)
-    
-        else:
-            self.pixmap = QPixmap(unfilled)
 
-
+        self.pixmap = QPixmap(filled) if self.filled else QPixmap(unfilled)
         self.setMaximumSize(self.pixmap.size())
         self.setMinimumSize(self.pixmap.size())
         self.update()
@@ -1066,15 +1030,10 @@ class Squares_Group(QButtonGroup):
         if self.last_click == index:
             # if a box is clicked twice in a row it unfills it
             index -= 1
-            
-        for x in range(1, self.stat_max):
-            if x <= index:
-                self.squares[x].filled = True
-                self.squares[x].select_Image()
-            elif x > index:
-                self.squares[x].filled = False
-                self.squares[x].select_Image()
 
+        for x in range(1, self.stat_max):
+            self.squares[x].filled = x <= index
+            self.squares[x].select_Image()
         # associated stat is updated 
         self.character.stats[self.stat_name] = index
         self.last_click = index
@@ -1085,7 +1044,7 @@ class Num_with_Line(QWidget):
     '''
     def __init__(self, text):
         super().__init__()
-        self.text = " " + text + " "
+        self.text = f" {text} "
         self.initUI()
         
         
@@ -1102,7 +1061,7 @@ class Num_with_Line(QWidget):
         self.grid.addWidget(self.rating,0,0)
 
     def change_text(self, new_text):
-        self.text = " " + new_text + " "
+        self.text = f" {new_text} "
         self.rating.setText(self.text)
 
 class TextBoxEntry(QWidget):
@@ -1121,7 +1080,7 @@ class TextBoxEntry(QWidget):
 
         if self.title:
             overall_label = QLabel()
-            overall_label.setText('==' + self.stat.upper() + '==')
+            overall_label.setText(f'=={self.stat.upper()}==')
             overall_label.setStyleSheet("QLabel {font: 13pt;}")
             self.grid.addWidget(overall_label, 0, 0)
             self.grid.setAlignment(overall_label, Qt.AlignHCenter)
@@ -1165,7 +1124,7 @@ class TextEditResizing(QTextEdit):
 class Hover_Label_Col(QWidget):
     def __init__(self, title, character, stat_name):
         super().__init__()
-        self.title = "===" + title + "==="
+        self.title = f"==={title}==="
         self.character = character
         self.stat_name = stat_name
         self.initUI()
@@ -1175,7 +1134,7 @@ class Hover_Label_Col(QWidget):
         self.box.setSpacing(0)
         self.box.setContentsMargins(0,0,0,0)
         self.setLayout(self.box)
-        
+
         title_label = QLabel(self.title)
         title_label.setStyleSheet("QLabel { font: 13pt }" )
         self.box.addWidget(title_label)
@@ -1191,13 +1150,9 @@ class Hover_Label_Col(QWidget):
         for stat in self.character.stats[self.stat_name]:
             button = QPushButton(stat.title())
             button.setCursor(QCursor(Qt.WhatsThisCursor))
-            
+
             item = self.character.stats[self.stat_name][stat]
-            if type(item) is dict:
-                tooltip = item['tooltip']
-            else:
-                tooltip = item
-                
+            tooltip = item['tooltip'] if type(item) is dict else item
             button.setToolTip(tooltip)
             button.setStyleSheet("QPushButton {border:none; font: 10pt}")
 
@@ -1208,7 +1163,7 @@ class Hover_Label_Col(QWidget):
 
             self.row += 1
 
-        
+
         if self.stat_name in ("conditions", "active spells"):
             # other types only edited in edit mode
             # new button not added unless edit mode toggled
@@ -1223,10 +1178,12 @@ class Hover_Label_Col(QWidget):
         Used for updating a current entry, deleting a current entry or adding a new one.
         '''
 
-        if self.stat_name not in ("conditions", "active spells"):
-            if not self.character.edit_mode:
-                # other stats can only be changed in edit mode
-                return
+        if (
+            self.stat_name not in ("conditions", "active spells")
+            and not self.character.edit_mode
+        ):
+            # other stats can only be changed in edit mode
+            return
 
         if not index:
             current_title = None
@@ -1239,7 +1196,7 @@ class Hover_Label_Col(QWidget):
             current_title = current.text().title()
             current_tooltip = current.toolTip()
             label, tooltip, ok = Label_Tooltip_Dialog.get_input(title = current_title, tooltip = current_tooltip, edit = True, wintitle = "Change Item")
-        
+
         if not ok:
             return
 
@@ -1248,7 +1205,7 @@ class Hover_Label_Col(QWidget):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
 
-            msg.setText(self.stat_name.title()[:-1] + " with this name already exists.")
+            msg.setText(f"{self.stat_name.title()[:-1]} with this name already exists.")
             msg.setInformativeText("Please use unique name.")
             msg.setWindowTitle("Duplicate Name")
             msg.setStandardButtons(QMessageBox.Ok)
@@ -1280,7 +1237,7 @@ class Hover_Label_Col(QWidget):
 
             # add the new button back to end
             self.box.addWidget(self.new_button)
-        
+
 
 
         elif "####delete####" in label:
@@ -1292,7 +1249,7 @@ class Hover_Label_Col(QWidget):
             # remove associated data
             del self.character.stats[self.stat_name][current_title.lower()]
             del self.content[index]
-            
+
         else:
             # Update tooltip of existing entry
             self.character.stats[self.stat_name][current.text()]['tooltip'] = tooltip

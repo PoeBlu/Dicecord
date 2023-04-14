@@ -37,11 +37,8 @@ HEADERS = [['shadow name', 'user id', 'webhook'],
            ['concept','virtue','vice'],
            ['path', 'order', 'legacy']]
 
-# make default mage
-DEFAULT = {}
 statCopy = stats.STATS.copy()
-for stat in statCopy:
-    DEFAULT[stat] = statCopy[stat]
+DEFAULT = {stat: statCopy[stat] for stat in statCopy}
 for arcana in ARCANA:
     DEFAULT[arcana] = 0
 for skill in stats.SKILLS:
@@ -297,7 +294,9 @@ class Mana(QWidget):
 
         # base current
         current_num = int(self.character.stats['mana']) - int(self.character.stats['mana spent']) # imported as str
-        self.current = basicUI.Num_with_Line(str(current_num) + "/" + str(self.character.stats['mana']))
+        self.current = basicUI.Num_with_Line(
+            f"{str(current_num)}/" + str(self.character.stats['mana'])
+        )
 
         self.grid.addWidget(self.base_label, 2, 0)
         self.grid.setAlignment(self.base_label, Qt.AlignRight)
@@ -330,7 +329,7 @@ class Mana(QWidget):
             item_type = self.character.stats['ench items'][item]['type']
 
             # label
-            label = QLabel(item.title() + "(" + item_type.title() + ") :")
+            label = QLabel(f"{item.title()}({item_type.title()}) :")
             self.ench_items[self.row].append(label)
 
             # spent
@@ -343,7 +342,7 @@ class Mana(QWidget):
 
             # current
             current_num = total_mana - spent_mana
-            current = basicUI.Num_with_Line(str(current_num) + "/" + str(total_mana))
+            current = basicUI.Num_with_Line(f"{str(current_num)}/{total_mana}")
             self.ench_items[self.row].append(current)
 
             # add to grid
@@ -359,7 +358,9 @@ class Mana(QWidget):
         self.spent.setMaximum(self.character.stats['mana'])
 
         current_num = self.character.stats['mana'] - self.character.stats['mana spent']
-        self.current.change_text(str(current_num) + "/" + str(self.character.stats['mana']))
+        self.current.change_text(
+            f"{str(current_num)}/" + str(self.character.stats['mana'])
+        )
 
         # rest changed
         for item in self.ench_items:
@@ -372,7 +373,10 @@ class Mana(QWidget):
 
             # update current display
             current_num = int(self.character.stats['ench items'][name]['mana']) - spent_widget.value() # imported as str
-            current_widget.change_text(str(current_num) + "/" + str(self.character.stats['ench items'][name]['mana']))
+            current_widget.change_text(
+                f"{str(current_num)}/"
+                + str(self.character.stats['ench items'][name]['mana'])
+            )
 
 
 def from_xml(cls, dom):

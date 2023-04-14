@@ -15,10 +15,7 @@ HEADERS = [['name', 'user id', 'webhook'],
            ['mask','dirge','concept'],
            ['clan', 'bloodline', 'covenant']]
 
-# make default vampire
-DEFAULT = {}
-for stat in stats.STATS.copy():
-    DEFAULT[stat] = stats.STATS[stat]
+DEFAULT = {stat: stats.STATS[stat] for stat in stats.STATS.copy()}
 for skill in stats.SKILLS:
     DEFAULT[skill] = 0
 for attribute in stats.ATTRIBUTES:
@@ -220,53 +217,46 @@ class Humanity(QWidget):
 
         self.derangements = QButtonGroup()
         self.derangements.buttonClicked[int].connect(self.edit_Derangement)
-        
+
         for i in range(10, 0, -1):
-          self.widgets[i] = {}
+            self.widgets[i] = {'ratinglabel': QLabel(str(i))}
 
-          # add numeric label
-          self.widgets[i]['ratinglabel'] = QLabel(str(i))
-          self.widgets[i]['ratinglabel'].setStyleSheet("QLabel { font: 12pt}")
+            self.widgets[i]['ratinglabel'].setStyleSheet("QLabel { font: 12pt}")
 
-          # add dot
-          fillcheck = i <= self.character.stats['humanity']
-          self.widgets[i]['dot'] = basicUI.Dot(filled = fillcheck)
-          self.dots.addButton(self.widgets[i]['dot'],i)
+            # add dot
+            fillcheck = i <= self.character.stats['humanity']
+            self.widgets[i]['dot'] = basicUI.Dot(filled = fillcheck)
+            self.dots.addButton(self.widgets[i]['dot'],i)
 
-          # add Derangement
-          self.widgets[i]['label'] = basicUI.Lined_Button("")
-          self.widgets[i]['label'].setCursor(QCursor(Qt.PointingHandCursor))
-          
-          self.derangements.addButton(self.widgets[i]['label'].button,i)
+            # add Derangement
+            self.widgets[i]['label'] = basicUI.Lined_Button("")
+            self.widgets[i]['label'].setCursor(QCursor(Qt.PointingHandCursor))
 
-          # check for Derangement details
-          if i in self.character.stats['derangements']:
-              title = self.character.stats['derangements'][i]['title']
-              tooltip = self.character.stats['derangements'][i]['tooltip']
-              # recheck
-              self.widgets[i]['label'].change_text(title)
-              self.widgets[i]['label'].button.setToolTip(tooltip)
+            self.derangements.addButton(self.widgets[i]['label'].button,i)
 
-          # add to layout
-          self.widgets[i]['boxdot'] = QHBoxLayout()
-          self.widgets[i]['boxdot'].addWidget(self.widgets[i]['dot'])
-          self.widgets[i]['boxdot'].addWidget(self.widgets[i]['label'])
-          self.form.addRow(self.widgets[i]['ratinglabel'], self.widgets[i]['boxdot'])
+            # check for Derangement details
+            if i in self.character.stats['derangements']:
+                title = self.character.stats['derangements'][i]['title']
+                tooltip = self.character.stats['derangements'][i]['tooltip']
+                # recheck
+                self.widgets[i]['label'].change_text(title)
+                self.widgets[i]['label'].button.setToolTip(tooltip)
+
+            # add to layout
+            self.widgets[i]['boxdot'] = QHBoxLayout()
+            self.widgets[i]['boxdot'].addWidget(self.widgets[i]['dot'])
+            self.widgets[i]['boxdot'].addWidget(self.widgets[i]['label'])
+            self.form.addRow(self.widgets[i]['ratinglabel'], self.widgets[i]['boxdot'])
 
     def edit_dots(self, value):
 
         # only runs on edit mode
         if not self.character.edit_mode:
             return
-        
+
         self.character.stats['humanity'] = value
         for row in self.widgets:
-            if row <= value:
-                self.widgets[row]['dot'].filled = True
-                
-            else:
-                self.widgets[row]['dot'].filled = False
-                
+            self.widgets[row]['dot'].filled = row <= value
             self.widgets[row]['dot'].select_Image()
 
     def edit_Derangement(self, index):
@@ -337,7 +327,9 @@ class Vitae(QWidget):
 
         # base current
         current_num = self.character.stats['vitae'] - self.character.stats['vitae spent']
-        self.current = basicUI.Num_with_Line(str(current_num) + "/" + str(self.character.stats['vitae']))
+        self.current = basicUI.Num_with_Line(
+            f"{str(current_num)}/" + str(self.character.stats['vitae'])
+        )
 
         self.grid.addWidget(self.spent, 2, 0)
         self.grid.setAlignment(self.spent, Qt.AlignHCenter)
@@ -350,7 +342,9 @@ class Vitae(QWidget):
         self.spent.setMaximum(self.character.stats['vitae'])
 
         current_num = self.character.stats['vitae'] - self.character.stats['vitae spent']
-        self.current.change_text(str(current_num) + "/" + str(self.character.stats['vitae']))
+        self.current.change_text(
+            f"{str(current_num)}/" + str(self.character.stats['vitae'])
+        )
 
 
 if __name__ == '__main__':
